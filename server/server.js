@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fetch = require('node-fetch');
+const { v4: uuidv4 } = require('uuid');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +12,34 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
+
+// ─── Database History Endpoints ───────────────────────────────────────────────
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const sessions = await db.all('SELECT * FROM sessions ORDER BY created_at DESC');
+    res.json(sessions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/sessions/:id', async (req, res) => {
+  try {
+    const messages = await db.all('SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC', [req.params.id]);
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/sessions/:id', async (req, res) => {
+  try {
+    await db.run('DELETE FROM sessions WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are an AI assistant specialized exclusively in ISRO, NASA, space exploration, aerospace engineering, astronomy, and the global space industry.
@@ -75,7 +105,7 @@ Current date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'nu
 
 // ─── Chat Endpoint ────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
-  const { messages, apiKey } = req.body;
+  const { messages, apiKey, sessionId } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Invalid messages format' });
@@ -137,7 +167,32 @@ app.post('/api/chat', async (req, res) => {
         continue;
       }
 
-      return res.json({ response: text, model });
+      // ─── Save conversation history to SQLite ───
+      try {
+        let activeSessionId = sessionId;
+        let isNewSession = false;
+        if (!activeSessionId) {
+          activeSessionId = uuidv4();
+          isNewSession = true;
+        }
+
+        const lastUserMsg = messages[messages.length - 1];
+        const sessionTitle = lastUserMsg ? (lastUserMsg.content.slice(0, 40) + (lastUserMsg.content.length > 40 ? '...' : '')) : 'New Conversation';
+
+        if (isNewSession) {
+          await db.run('INSERT INTO sessions (id, title) VALUES (?, ?)', [activeSessionId, sessionTitle]);
+        }
+        if (lastUserMsg) {
+          await db.run('INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)', [activeSessionId, 'user', lastUserMsg.content]);
+        }
+        await db.run('INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)', [activeSessionId, 'assistant', text]);
+
+        return res.json({ response: text, model, sessionId: activeSessionId });
+      } catch (dbErr) {
+        console.error('Failed to log message to database:', dbErr.message);
+        // Still return the response to the user so the chat isn't blocked
+        return res.json({ response: text, model, sessionId });
+      }
 
     } catch (err) {
       lastError = err.message;

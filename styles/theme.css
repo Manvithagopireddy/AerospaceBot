@@ -1039,3 +1039,38 @@ body {
 
 /* ── Utilities ───────────────────────────────────────────────── */
 * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.07) transparent; }
+
+/* ── Chat History Extra Styles ───────────────────────────────── */
+.history-item {
+  position: relative;
+  padding-right: 36px !important;
+}
+.history-item.active {
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.25);
+  color: var(--blue-400);
+}
+.delete-session-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  display: none;
+  border-radius: 4px;
+  transition: all var(--t1);
+}
+.history-item:hover .delete-session-btn {
+  display: block;
+}
+.delete-session-btn:hover {
+  color: var(--red-400);
+  background: rgba(239, 68, 68, 0.15);
+}
+

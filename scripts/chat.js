@@ -8,6 +8,7 @@ const state = {
   messages: [],
   isLoading: false,
   apiKey: '',
+  sessionId: '',
 };
 
 // ── DOM ──────────────────────────────────────────────────────
@@ -29,6 +30,8 @@ const DOM = {
   overlay:      () => $('sidebarOverlay'),
   hamburger:    () => $('hamburgerBtn'),
   newChat:      () => $('newChatBtn'),
+  historySection: () => $('historySection'),
+  historyList:  () => $('historyList'),
 };
 
 // ── Starfield ────────────────────────────────────────────────
@@ -271,7 +274,7 @@ async function sendMessage(text) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: state.messages, apiKey: key }),
+      body: JSON.stringify({ messages: state.messages, apiKey: key, sessionId: state.sessionId }),
     });
 
     const data = await res.json();
@@ -280,6 +283,11 @@ async function sendMessage(text) {
     hideTyping();
     state.messages.push({ role: 'assistant', content: data.response });
     renderMessage('bot', data.response);
+
+    if (data.sessionId && state.sessionId !== data.sessionId) {
+      state.sessionId = data.sessionId;
+      fetchHistory();
+    }
 
   } catch (err) {
     hideTyping();
@@ -321,6 +329,7 @@ function autoResize(el) {
 // ── New Chat ─────────────────────────────────────────────────
 function newChat() {
   state.messages = [];
+  state.sessionId = '';
   state.isLoading = false;
 
   const ca = DOM.chatArea();
@@ -337,6 +346,7 @@ function newChat() {
   autoResize(DOM.input());
   DOM.sendBtn().disabled = false;
   closeSidebar();
+  fetchHistory();
 }
 
 function buildWelcome() {
@@ -482,6 +492,133 @@ function init() {
 
   // Error toast dismiss on click
   DOM.errorToast().addEventListener('click', () => DOM.errorToast().classList.remove('visible'));
+
+  // Load chat history list
+  fetchHistory();
+}
+
+// ── Chat History Helpers ─────────────────────────────────────
+async function fetchHistory() {
+  try {
+    const res = await fetch('/api/sessions');
+    if (!res.ok) throw new Error('Failed to fetch history');
+    const sessions = await res.json();
+    
+    const list = DOM.historyList();
+    list.innerHTML = '';
+    
+    if (sessions.length > 0) {
+      DOM.historySection().style.display = 'block';
+      sessions.forEach(s => {
+        const item = document.createElement('div');
+        item.className = `nav-item history-item ${state.sessionId === s.id ? 'active' : ''}`;
+        item.dataset.sessionId = s.id;
+        
+        const icon = document.createElement('span');
+        icon.className = 'nav-icon';
+        icon.textContent = '💬';
+        
+        const label = document.createElement('span');
+        label.className = 'nav-item-label';
+        label.textContent = s.title;
+        label.style.cursor = 'pointer';
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-session-btn';
+        delBtn.title = 'Delete conversation';
+        delBtn.textContent = '×';
+        
+        // Load session event
+        const loadHandler = (e) => {
+          e.stopPropagation();
+          loadSession(s.id);
+        };
+        label.addEventListener('click', loadHandler);
+        icon.addEventListener('click', loadHandler);
+        
+        // Delete session event
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteSession(s.id);
+        });
+        
+        item.appendChild(icon);
+        item.appendChild(label);
+        item.appendChild(delBtn);
+        list.appendChild(item);
+      });
+    } else {
+      DOM.historySection().style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Error fetching history:', err);
+  }
+}
+
+async function loadSession(sessionId) {
+  if (state.isLoading) return;
+  state.sessionId = sessionId;
+  
+  // Highlight active session
+  document.querySelectorAll('.history-item').forEach(item => {
+    if (item.dataset.sessionId === sessionId) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  try {
+    state.isLoading = true;
+    DOM.sendBtn().disabled = true;
+    showTyping();
+    
+    const res = await fetch(`/api/sessions/${sessionId}`);
+    if (!res.ok) throw new Error('Failed to load session');
+    const messages = await res.json();
+    
+    hideTyping();
+    
+    // Clear chat area
+    const ca = DOM.chatArea();
+    ca.innerHTML = '';
+    
+    // Re-create messages wrapper and render messages
+    state.messages = messages;
+    
+    messages.forEach(m => {
+      renderMessage(m.role === 'assistant' ? 'bot' : 'user', m.content, false);
+    });
+    
+    // Restore typing indicator at bottom
+    ca.appendChild(buildTypingIndicator());
+    
+    closeSidebar();
+  } catch (err) {
+    hideTyping();
+    showError('❌ ' + err.message);
+  } finally {
+    state.isLoading = false;
+    DOM.sendBtn().disabled = false;
+    DOM.input().focus();
+  }
+}
+
+async function deleteSession(sessionId) {
+  if (confirm('Are you sure you want to delete this conversation?')) {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete session');
+      
+      if (state.sessionId === sessionId) {
+        newChat();
+      } else {
+        fetchHistory();
+      }
+    } catch (err) {
+      showError('❌ ' + err.message);
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
