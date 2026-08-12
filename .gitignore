@@ -24,3 +24,7 @@ npm-debug.log
 # Logs
 logs
 *.log
+
+# Database
+*.sqlite
+database.sqlite
