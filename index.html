@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI-powered aerospace specialist chatbot covering ISRO, NASA, rockets, satellites, astronomy, astrophysics, and the global space industry." />
+  <title>AerospaceBot — ISRO & NASA Specialist AI</title>
+  <link rel="stylesheet" href="styles/theme.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+</head>
+<body>
+
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="nebula-overlay" aria-hidden="true"></div>
+
+  <div id="app">
+
+    <!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+    <aside id="sidebar" aria-label="Navigation">
+
+      <div class="sidebar-header">
+        <div class="logo-mark">🚀</div>
+        <div class="logo-wordmark">
+          <div class="logo-name">AerospaceBot</div>
+          <div class="logo-tagline">AI Space Assistant</div>
+        </div>
+      </div>
+
+      <div class="sidebar-body">
+
+        <button class="new-chat-btn" id="newChatBtn">
+          <span class="btn-icon">✦</span>
+          New Conversation
+        </button>
+
+        <!-- Indian Space Program -->
+        <div class="nav-section">
+          <div class="nav-label">🇮🇳 Indian Space</div>
+          <button class="nav-item" data-topic="isro">
+            <span class="nav-icon">🛰️</span>
+            <span class="nav-item-label">ISRO Overview</span>
+          </button>
+          <button class="nav-item" data-topic="gaganyaan">
+            <span class="nav-icon">🧑‍🚀</span>
+            <span class="nav-item-label">Gaganyaan</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about all Chandrayaan missions and their achievements.">
+            <span class="nav-icon">🌙</span>
+            <span class="nav-item-label">Chandrayaan</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about India's Aditya-L1 solar mission, its status and findings.">
+            <span class="nav-icon">☀️</span>
+            <span class="nav-item-label">Aditya-L1</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about PSLV, GSLV, LVM3 and future Indian launch vehicles.">
+            <span class="nav-icon">🚀</span>
+            <span class="nav-item-label">Launch Vehicles</span>
+          </button>
+        </div>
+
+        <!-- NASA -->
+        <div class="nav-section">
+          <div class="nav-label">🇺🇸 NASA</div>
+          <button class="nav-item" data-topic="nasa">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-item-label">Current Missions</span>
+          </button>
+          <button class="nav-item" data-topic="artemis">
+            <span class="nav-icon">🌕</span>
+            <span class="nav-item-label">Artemis Program</span>
+          </button>
+          <button class="nav-item" data-topic="jwst">
+            <span class="nav-icon">🔭</span>
+            <span class="nav-item-label">James Webb Telescope</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about NASA's Mars exploration missions — Perseverance, Curiosity and future plans.">
+            <span class="nav-icon">🔴</span>
+            <span class="nav-item-label">Mars Missions</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about the International Space Station, its modules and current status.">
+            <span class="nav-icon">🏗️</span>
+            <span class="nav-item-label">Space Station (ISS)</span>
+          </button>
+        </div>
+
+        <!-- Private & Global -->
+        <div class="nav-section">
+          <div class="nav-label">🚀 Global Industry</div>
+          <button class="nav-item" data-topic="spacex">
+            <span class="nav-icon">⚫</span>
+            <span class="nav-item-label">SpaceX</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about ESA, JAXA, CNSA and Roscosmos missions.">
+            <span class="nav-icon">🌍</span>
+            <span class="nav-item-label">ESA / JAXA / CNSA</span>
+          </button>
+          <button class="nav-item" data-topic="rockets">
+            <span class="nav-icon">📡</span>
+            <span class="nav-item-label">Rockets & Propulsion</span>
+          </button>
+          <button class="nav-item" data-topic="Tell me about satellite technology, types of orbits and applications.">
+            <span class="nav-icon">🛰️</span>
+            <span class="nav-item-label">Satellites & Orbits</span>
+          </button>
+        </div>
+
+        <!-- Space Science -->
+        <div class="nav-section">
+          <div class="nav-label">🌌 Space Science</div>
+          <button class="nav-item" data-topic="Tell me about black holes — types, formation, detection and recent discoveries.">
+            <span class="nav-icon">🕳️</span>
+            <span class="nav-item-label">Black Holes</span>
+          </button>
+          <button class="nav-item" data-topic="Explain exoplanet discovery methods and the most significant exoplanet discoveries so far.">
+            <span class="nav-icon">🪐</span>
+            <span class="nav-item-label">Exoplanets</span>
+          </button>
+          <button class="nav-item" data-topic="astronomy">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-item-label">Astronomy</span>
+          </button>
+          <button class="nav-item" data-topic="Explain dark matter and dark energy — what they are and how we study them.">
+            <span class="nav-icon">🌀</span>
+            <span class="nav-item-label">Dark Matter & Energy</span>
+          </button>
+          <button class="nav-item" data-topic="careers">
+            <span class="nav-icon">🎓</span>
+            <span class="nav-item-label">Aerospace Careers</span>
+          </button>
+        </div>
+
+      </div><!-- end sidebar-body -->
+
+      <!-- API Key Footer -->
+      <div class="sidebar-footer">
+        <div class="api-row-label">🔑 Gemini API Key</div>
+        <div class="api-input-group">
+          <input
+            type="password"
+            id="apiKeyInput"
+            placeholder="Enter API key..."
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Gemini API Key"
+          />
+          <button class="api-toggle-btn" id="apiToggleBtn" aria-label="Toggle visibility" title="Show/hide key">👁</button>
+        </div>
+        <button class="api-save-btn" id="apiSaveBtn">Save Key</button>
+        <div class="api-hint">
+          Get a free key at <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com</a>
+        </div>
+      </div>
+
+    </aside>
+
+    <div id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- ══════════════════════ MAIN ══════════════════════ -->
+    <div id="main">
+
+      <!-- Header -->
+      <header id="header">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">☰</button>
+        <div class="header-divider"></div>
+        <div class="header-title-group">
+          <div class="header-title">Aerospace Intelligence</div>
+          <div class="header-subtitle">ISRO · NASA · Space Science · Aerospace Engineering</div>
+        </div>
+        <div class="header-spacer"></div>
+        <div class="status-pill" role="status">
+          <div class="status-dot offline" id="statusDot"></div>
+          <span id="statusText">No API Key</span>
+        </div>
+        <div class="model-chip">
+          <div class="model-chip-dot"></div>
+          <span>Gemini 2.5 Flash</span>
+        </div>
+      </header>
+
+      <!-- Chat -->
+      <div id="chatArea" role="log" aria-live="polite" aria-label="Chat conversation">
+
+        <!-- Welcome -->
+        <div id="welcomeScreen">
+          <div class="hero-icon-wrap">
+            <div class="hero-ring-2"></div>
+            <div class="hero-ring"></div>
+            <div class="hero-icon">🛸</div>
+          </div>
+
+          <h1 class="welcome-title">Your Aerospace Intelligence</h1>
+          <p class="welcome-sub">
+            Expert answers on ISRO, NASA, space missions, rockets, satellites,
+            black holes, and the entire universe — powered by Gemini AI.
+          </p>
+
+          <div class="domain-pills">
+            <span class="domain-pill" onclick="onSuggestionClick('Tell me about ISRO\'s most significant missions.')">🇮🇳 ISRO</span>
+            <span class="domain-pill" onclick="onSuggestionClick('What are NASA\'s current missions?')">🇺🇸 NASA</span>
+            <span class="domain-pill" onclick="onSuggestionClick('Explain how rockets work and types of propulsion.')">🚀 Rockets</span>
+            <span class="domain-pill" onclick="onSuggestionClick('Tell me about the latest astronomical discoveries.')">🌌 Astronomy</span>
+            <span class="domain-pill" onclick="onSuggestionClick('Explain satellite technology and types of orbits.')">🛰️ Satellites</span>
+            <span class="domain-pill" onclick="onSuggestionClick('What careers are available in aerospace engineering?')">✈️ Careers</span>
+          </div>
+
+          <div class="suggestions-grid">
+            <button class="suggestion-card" style="animation-delay:0.05s"
+              onclick="onSuggestionClick('Tell me about India\'s Chandrayaan-3 mission — the lunar south pole landing and its findings.')">
+              <span class="sug-icon">🌙</span>
+              <div class="sug-title">Chandrayaan-3</div>
+              <div class="sug-desc">India's landmark lunar south pole landing</div>
+            </button>
+            <button class="suggestion-card" style="animation-delay:0.10s"
+              onclick="onSuggestionClick('What are the most significant discoveries of the James Webb Space Telescope?')">
+              <span class="sug-icon">🔭</span>
+              <div class="sug-title">James Webb Telescope</div>
+              <div class="sug-desc">Universe's deepest views ever captured</div>
+            </button>
+            <button class="suggestion-card" style="animation-delay:0.15s"
+              onclick="onSuggestionClick('Explain India\'s Gaganyaan human spaceflight mission — status, timeline and crew.')">
+              <span class="sug-icon">🧑‍🚀</span>
+              <div class="sug-title">Gaganyaan Mission</div>
+              <div class="sug-desc">India's first crewed spaceflight program</div>
+            </button>
+            <button class="suggestion-card" style="animation-delay:0.20s"
+              onclick="onSuggestionClick('What missions are currently exploring Mars? What have they discovered?')">
+              <span class="sug-icon">🔴</span>
+              <div class="sug-title">Mars Exploration</div>
+              <div class="sug-desc">Active rovers & orbiters on the Red Planet</div>
+            </button>
+            <button class="suggestion-card" style="animation-delay:0.25s"
+              onclick="onSuggestionClick('Explain black holes — their types, how they form, and how we detect them.')">
+              <span class="sug-icon">🕳️</span>
+              <div class="sug-title">Black Holes</div>
+              <div class="sug-desc">Formation, types & detection methods</div>
+            </button>
+            <button class="suggestion-card" style="animation-delay:0.30s"
+              onclick="onSuggestionClick('Explain rocket propulsion — how rocket engines work, types of propellants and specific impulse.')">
+              <span class="sug-icon">⚡</span>
+              <div class="sug-title">Rocket Propulsion</div>
+              <div class="sug-desc">Engines, propellants & specific impulse</div>
+            </button>
+          </div>
+        </div>
+        <!-- end welcome -->
+
+        <!-- Typing indicator (placed at end, always in DOM) -->
+        <div id="typingIndicator" role="status" aria-label="Bot is responding">
+          <div class="message-avatar" style="width:32px;height:32px;background:var(--grad-brand);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;align-self:flex-end;">🚀</div>
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+      </div><!-- end chatArea -->
+
+      <!-- Input -->
+      <div id="inputArea">
+        <div class="input-wrapper">
+          <div class="input-box">
+            <textarea
+              id="messageInput"
+              rows="1"
+              placeholder="Ask about ISRO, NASA, black holes, rockets, space missions..."
+              aria-label="Type your question"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" aria-label="Send">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end main -->
+  </div><!-- end app -->
+
+  <!-- Error Toast -->
+  <div id="errorToast" role="alert">
+    <span>⚠</span>
+    <span id="errorMsg">An error occurred.</span>
+  </div>
+
+  <script src="scripts/chat.js"></script>
+</body>
+</html>

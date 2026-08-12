@@ -1,0 +1,16 @@
+{
+  "name": "aerospace-specialist-bot",
+  "version": "1.0.0",
+  "description": "ISRO, NASA & Aerospace Specialist AI Chatbot",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0",
+    "dotenv": "^16.3.1"
+  }
+}
