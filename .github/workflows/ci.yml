@@ -22,10 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
-
-      - name: Rebuild Native Modules
-        run: npm rebuild sqlite3
+        run: npm ci
 
       - name: Code Syntax & Lint Check
         run: npm run lint

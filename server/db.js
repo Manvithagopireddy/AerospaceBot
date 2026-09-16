@@ -1,61 +1,71 @@
-const sqlite3 = require('sqlite3').verbose();
+'use strict';
+const Database = require('better-sqlite3');
 const path = require('path');
 
 const dbPath = path.resolve(__dirname, '../database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('🚀 Connected to the SQLite database at:', dbPath);
-    db.serialize(() => {
-      db.run(`CREATE TABLE IF NOT EXISTS sessions (
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )`);
+const db = new Database(dbPath);
 
-      db.run(`CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id TEXT,
-        role TEXT,
-        content TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(session_id) REFERENCES sessions(id) ON DELETE CASCADE
-      )`);
-    });
-  }
-});
+console.log('🚀 Connected to the SQLite database at:', dbPath);
+
+// Enable foreign key support
+db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
+
+// Create tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    title TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT,
+    role TEXT,
+    content TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(session_id) REFERENCES sessions(id) ON DELETE CASCADE
+  )
+`);
+
+// ── Promise-compatible wrappers (same API as before) ─────────────────────────
+// better-sqlite3 is synchronous; we wrap in Promises to keep server.js intact.
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve({ id: this.lastID, changes: this.changes });
-    });
+    try {
+      const stmt = db.prepare(sql);
+      const info = stmt.run(params);
+      resolve({ id: info.lastInsertRowid, changes: info.changes });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 function all(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+    try {
+      const stmt = db.prepare(sql);
+      resolve(stmt.all(params));
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
+    try {
+      const stmt = db.prepare(sql);
+      resolve(stmt.get(params));
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
-module.exports = {
-  db,
-  run,
-  all,
-  get
-};
+module.exports = { db, run, all, get };
