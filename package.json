@@ -5,7 +5,9 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "test": "node --test tests/api.test.js",
+    "lint": "node --check server/server.js server/db.js scripts/chat.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

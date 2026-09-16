@@ -13,6 +13,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
+// ─── Health & Config Endpoints ───────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    database: 'connected',
+    hasServerKey: !!process.env.GEMINI_API_KEY
+  });
+});
+
+app.get('/api/config', (req, res) => {
+  res.json({
+    hasServerKey: !!process.env.GEMINI_API_KEY,
+    models: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash']
+  });
+});
+
+
 // ─── Database History Endpoints ───────────────────────────────────────────────
 app.get('/api/sessions', async (req, res) => {
   try {
@@ -206,9 +225,14 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 AerospaceBot server running at http://localhost:${PORT}`);
-  console.log(`   Model priority: gemini-2.5-flash → gemini-2.5-flash-lite → gemini-1.5-flash`);
-  console.log(`   API key loaded: ${process.env.GEMINI_API_KEY ? 'YES (server-side)' : 'No (user must provide in UI)'}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 AerospaceBot server running at http://localhost:${PORT}`);
+    console.log(`   Model priority: gemini-2.5-flash → gemini-2.5-flash-lite → gemini-1.5-flash`);
+    console.log(`   API key loaded: ${process.env.GEMINI_API_KEY ? 'YES (server-side)' : 'No (user must provide in UI)'}`);
+  });
+}
+
+module.exports = app;
+
 

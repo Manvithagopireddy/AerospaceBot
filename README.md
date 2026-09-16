@@ -1,5 +1,6 @@
 # 🚀 AerospaceBot — Domain-Specialized Space & Astronomy AI Assistant
 
+[![CI Workflow](https://github.com/Manvithagopireddy/AerospaceBot/actions/workflows/ci.yml/badge.svg)](https://github.com/Manvithagopireddy/AerospaceBot/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-v4.18-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com/)
@@ -111,6 +112,26 @@ AerospaceBot is designed to solve the common pitfalls of generic conversational 
 
 5. **Open in Browser:**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+### 🧪 Automated Testing & Linting
+Run the native test suite and syntax verification:
+```bash
+# Execute unit & integration test suite (8 tests)
+npm test
+
+# Verify JavaScript syntax across server and client
+npm run lint
+```
+
+### 🐳 Docker Containerization
+Build and run the containerized application locally:
+```bash
+# Build the Docker image
+docker build -t aerospacebot .
+
+# Run container with API key
+docker run -p 3000:3000 -e GEMINI_API_KEY=your_gemini_api_key_here aerospacebot
+```
 
 ---
 

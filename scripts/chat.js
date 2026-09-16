@@ -9,6 +9,7 @@ const state = {
   isLoading: false,
   apiKey: '',
   sessionId: '',
+  hasServerKey: false,
 };
 
 // ── DOM ──────────────────────────────────────────────────────
@@ -256,7 +257,7 @@ async function sendMessage(text) {
   if (!text || state.isLoading) return;
 
   const key = state.apiKey || localStorage.getItem('aerospacebot_key') || '';
-  if (!key) {
+  if (!key && !state.hasServerKey) {
     showError('⚠ Enter your Gemini API key in the sidebar first.');
     return;
   }
@@ -433,21 +434,36 @@ function saveApiKey() {
   }, 2200);
 }
 
-function loadApiKey() {
+async function checkServerHealthAndApiKey() {
   const saved = localStorage.getItem('aerospacebot_key');
   if (saved) {
     state.apiKey = saved;
     DOM.apiKeyInput().value = saved;
     setStatus(true);
   }
+
+  try {
+    const res = await fetch('/api/health');
+    if (res.ok) {
+      const data = await res.json();
+      state.hasServerKey = !!data.hasServerKey;
+      if (state.hasServerKey && !saved) {
+        setStatus(true, true);
+        const inp = DOM.apiKeyInput();
+        if (inp) inp.placeholder = 'Server key active (optional override)';
+      }
+    }
+  } catch (err) {
+    console.warn('Health check unreachable:', err.message);
+  }
 }
 
-function setStatus(online) {
+function setStatus(online, isServerKey = false) {
   const dot = DOM.statusDot();
   const txt = DOM.statusText();
   if (online) {
     dot.classList.remove('offline');
-    txt.textContent = 'Online · Gemini AI';
+    txt.textContent = isServerKey ? 'Online · Server Key' : 'Online · Gemini AI';
   } else {
     dot.classList.add('offline');
     txt.textContent = 'No API Key';
@@ -457,7 +473,7 @@ function setStatus(online) {
 // ── Init ─────────────────────────────────────────────────────
 function init() {
   initStarfield();
-  loadApiKey();
+  checkServerHealthAndApiKey();
 
   // Input auto-resize + send on Enter
   const inp = DOM.input();
