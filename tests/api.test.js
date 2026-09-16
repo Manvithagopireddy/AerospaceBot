@@ -1,6 +1,6 @@
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
-const http = require('http');
+const fetch = require('node-fetch');
 const app = require('../server/server');
 const db = require('../server/db');
 
@@ -8,17 +8,26 @@ let server;
 let port;
 let baseUrl;
 
-before((_, done) => {
-  // Start server on an ephemeral free port
-  server = app.listen(0, () => {
-    port = server.address().port;
-    baseUrl = `http://localhost:${port}`;
-    done();
+before(() => {
+  return new Promise((resolve, reject) => {
+    // Start server on an ephemeral free port bound explicitly to IPv4 loopback
+    server = app.listen(0, '127.0.0.1', () => {
+      port = server.address().port;
+      baseUrl = `http://127.0.0.1:${port}`;
+      resolve();
+    });
+    server.on('error', reject);
   });
 });
 
-after((_, done) => {
-  server.close(done);
+after(() => {
+  return new Promise((resolve) => {
+    if (server) {
+      server.close(resolve);
+    } else {
+      resolve();
+    }
+  });
 });
 
 describe('1. Health & Configuration Endpoints', () => {
