@@ -8,25 +8,24 @@ on:
 
 jobs:
   test:
-    name: Test & Quality Checks (Node ${{ matrix.node-version }})
+    name: Test & Quality Checks
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 22.x (LTS)
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: npm install
+
+      - name: Rebuild Native Modules
+        run: npm rebuild sqlite3
 
       - name: Code Syntax & Lint Check
         run: npm run lint
