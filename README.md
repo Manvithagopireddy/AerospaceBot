@@ -18,16 +18,18 @@
 
 ---
 
-## 🎯 Recruiter & Technical Overview
+## Technical Overview
+
+This is a portfolio application, not an authoritative mission database. Generated answers may contain factual errors; verify mission details against official sources. Prompt-based domain restrictions are not a security boundary.
 
 AerospaceBot is designed to solve the common pitfalls of generic conversational LLMs: **hallucination of mission parameters**, **off-topic conversational drift**, and **lack of structured engineering outputs**.
 
 ### Key Architectural Highlights:
-- **Strict Domain Guardrails**: Custom system prompt architecture that programmatically constrains the LLM to aerospace, astronomy, and space tech, strictly rejecting off-topic prompts.
+- **Strict Domain Guardrails**: Custom system prompt architecture that instructs the LLM to aerospace, astronomy, and space tech, aiming to reject off-topic prompts.
 - **Structured Aerospace Schemas**: Automatically standardizes mission queries into formal engineering cards: *Launch Vehicle, Destination, Payload Instrumentation, Operational Status, and Next Milestones*.
-- **High-Resilience LLM Cascade**: Implements an automatic failover mechanism (`gemini-2.5-flash` $\rightarrow$ `gemini-2.5-flash-lite` $\rightarrow$ `gemini-1.5-flash`) ensuring zero downtime during API deprecations or rate-limit surges.
+- **High-Resilience LLM Cascade**: Implements an automatic failover mechanism (`gemini-2.5-flash` $\rightarrow$ `gemini-2.5-flash-lite` $\rightarrow$ `gemini-1.5-flash`) attempting recovery from model availability and rate-limit errors; downtime remains possible.
 - **Relational History Persistence**: Complete session and message threads persisted in SQLite with cascading deletes, thread switching, and rehydration.
-- **Zero-Dependency High-Performance Frontend**: 60 FPS interactive HTML5 Canvas starfield simulation with meteors, glassmorphism design system, and custom Markdown-to-HTML parser without framework overhead.
+- **Zero-Dependency High-Performance Frontend**: interactive HTML5 Canvas starfield simulation with meteors, glassmorphism design system, and custom Markdown-to-HTML parser without framework overhead.
 
 ---
 
