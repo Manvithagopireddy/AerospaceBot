@@ -9,9 +9,15 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '..')));
+app.disable('x-powered-by');
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN || false }));
+app.use(express.json({ limit: '256kb' }));
+// Serve only public frontend assets, never the repository or database directory.
+const publicRoot = path.join(__dirname, '..');
+app.get('/', (_req, res) => res.sendFile(path.join(publicRoot, 'index.html')));
+for (const folder of ['assets', 'scripts', 'styles']) {
+  app.use('/' + folder, express.static(path.join(publicRoot, folder)));
+}
 
 // ─── Health & Config Endpoints ───────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -38,7 +44,7 @@ app.get('/api/sessions', async (req, res) => {
     const sessions = await db.all('SELECT * FROM sessions ORDER BY created_at DESC');
     res.json(sessions);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Database operation failed' });
   }
 });
 
@@ -47,7 +53,7 @@ app.get('/api/sessions/:id', async (req, res) => {
     const messages = await db.all('SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC', [req.params.id]);
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Database operation failed' });
   }
 });
 
@@ -56,7 +62,7 @@ app.delete('/api/sessions/:id', async (req, res) => {
     await db.run('DELETE FROM sessions WHERE id = ?', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Database operation failed' });
   }
 });
 
@@ -124,9 +130,11 @@ Current date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'nu
 
 // ─── Chat Endpoint ────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
-  const { messages, apiKey, sessionId } = req.body;
+  const { messages, apiKey, sessionId } = req.body || {};
 
-  if (!messages || !Array.isArray(messages)) {
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > 100 ||
+      messages.some(m => !m || !['user', 'assistant'].includes(m.role) ||
+        typeof m.content !== 'string' || m.content.length > 20000)) {
     return res.status(400).json({ error: 'Invalid messages format' });
   }
 
@@ -226,7 +234,7 @@ app.post('/api/chat', async (req, res) => {
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 if (require.main === module) {
-  app.listen(PORT, () => {
+  app.listen(PORT, process.env.HOST || '127.0.0.1', () => {
     console.log(`🚀 AerospaceBot server running at http://localhost:${PORT}`);
     console.log(`   Model priority: gemini-2.5-flash → gemini-2.5-flash-lite → gemini-1.5-flash`);
     console.log(`   API key loaded: ${process.env.GEMINI_API_KEY ? 'YES (server-side)' : 'No (user must provide in UI)'}`);
